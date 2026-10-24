@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Targun Kilit Hesaplayıcı</title>
+  <!-- Telegram Web App Script -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-color: #0f1117;
+      --card-bg: #181c24;
+      --input-bg: #212631;
+      --accent-color: #f59e0b;
+      --accent-hover: #d97706;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #2e3646;
+      --success-color: #10b981;
+      --danger-color: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-bottom: 30px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(24, 28, 36, 0.5));
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 10px;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-weight: 700;
+      color: var(--accent-color);
+      font-size: 14px;
+    }
+
+    .user-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    input[type="number"] {
+      text-align: center;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-color);
+    }
+
+    .tab-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .tab-btn {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background-color: rgba(245, 158, 11, 0.15);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .race-select {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .village-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .btn-secondary {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent-color);
+    }
+
+    .calc-btn {
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      color: #000;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .calc-btn:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+
+    #sonucCard {
+      display: none;
+      border-color: var(--success-color);
+      background-color: #111e1b;
+    }
+
+    #sonucCard.late {
+      border-color: var(--danger-color);
+      background-color: #1e1111;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-val {
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .highlight-time {
+      font-size: 18px;
+      color: #34d399;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .highlight-time.late {
+      color: #f87171;
+    }
+
+    .warning-badge {
+      display: none;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid var(--danger-color);
+      color: #fca5a5;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .copy-btn {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px;
+      border-radius: 8px;
+      width: 100%;
+      margin-top: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Kullanıcı Karşılama Kartı -->
+    <div class="user-header">
+      <div class="user-info">
+        <span class="user-name" id="userDisplayName">Savaşçı</span>
+        <span class="user-tag" id="userSubText">Profil Yükleniyor...</span>
+      </div>
+      <div style="font-size: 20px;">🛡️</div>
+    </div>
+
+    <!-- 1. Hedef Bilgileri -->
+    <div class="card">
+      <div class="card-title">🎯 Düşman & Hedef Bilgileri</div>
+      
+      <div class="field">
+        <label>Düşmanın Çıkış Köyü (Saldıran)</label>
+        <div class="grid-2">
+          <input type="number" id="dx" placeholder="X (Örn: 9050)">
+          <input type="number" id="dy" placeholder="Y (Örn: 30950)">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Saldırılan Yer (Savunan Köy)</label>
+        <div class="grid-2">
+          <input type="number" id="sx" placeholder="X (Örn: 19172)">
+          <input type="number" id="sy" placeholder="Y (Örn: 35546)">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Düşmanın En Yavaş Birimi</label>
+        <div class="race-select" id="dusmanIrkGroup">
+          <div class="tab-btn active" onclick="setDusmanIrk('HUN', this)">🐺 HUN</div>
+          <div class="tab-btn" onclick="setDusmanIrk('GÖK', this)">🦅 GÖK</div>
+          <div class="tab-btn" onclick="setDusmanIrk('SEL', this)">🏹 SEL</div>
+        </div>
+        <select id="dusmanBirim"></select>
+      </div>
+
+      <!-- SS:DD:SN Kutuları -->
+      <div class="field">
+        <label>Saldırının Vurma / Çarpma Saati (SS : DD : SN)</label>
+        <div class="grid-3">
+          <input type="number" id="savasSaat" placeholder="Saat" min="0" max="23" inputmode="numeric">
+          <input type="number" id="savasDakika" placeholder="Dakika" min="0" max="59" inputmode="numeric">
+          <input type="number" id="savasSaniye" placeholder="Saniye" min="0" max="59" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Düşman Hareketi</label>
+        <div class="tab-group">
+          <div class="tab-btn active" onclick="setTab('dusmanTarz', 'normal', this)">🟢 Normal Geldi</div>
+          <div class="tab-btn" onclick="setTab('dusmanTarz', 'elmas', this)">💎 Elmas Bastı</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Kendi Kilit Bilgilerin -->
+    <div class="card">
+      <div class="card-title">🛡️ Senin Çıkış ve Ordu Bilgilerin</div>
+      
+      <!-- Köy Yönetim Listesi -->
+      <div class="field">
+        <label>Kayıtlı Köylerim</label>
+        <select id="koyListesi" onchange="koySecildi(this.value)">
+          <option value="">-- Yeni / Elle Koordinat Gir --</option>
+        </select>
+        <div class="village-actions">
+          <button class="btn-secondary" onclick="koyKaydet()">💾 Bu Konumu Kaydet</button>
+          <button class="btn-secondary" onclick="koySil()">🗑️ Seçili Köyü Sil</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Kilidi Atacağın Köyün (Senin Konumun)</label>
+        <div class="grid-2">
+          <input type="number" id="kx" placeholder="X (Örn: 8800)">
+          <input type="number" id="ky" placeholder="Y (Örn: 9800)">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Göndereceğin En Yavaş Birim</label>
+        <div class="race-select" id="kendiIrkGroup">
+          <div class="tab-btn active" onclick="setKendiIrk('HUN', this)">🐺 HUN</div>
+          <div class="tab-btn" onclick="setKendiIrk('GÖK', this)">🦅 GÖK</div>
+          <div class="tab-btn" onclick="setKendiIrk('SEL', this)">🏹 SEL</div>
+        </div>
+        <select id="kendiBirim"></select>
+      </div>
+
+      <div class="field">
+        <label>Senin Saldırı Tarzın</label>
+        <div class="tab-group">
+          <div class="tab-btn active" onclick="setTab('kendiTarz', 'normal', this)">🟢 Normal Gideceğim</div>
+          <div class="tab-btn" onclick="setTab('kendiTarz', 'elmas', this)">💎 Elmas Basacağım</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="kilitHesapla()">🔒 KİLİDİ HESAPLA</button>
+
+    <!-- Sonuç Kartı -->
+    <div class="card" id="sonucCard">
+      <div class="card-title" id="cardHeaderTitle" style="color: #34d399;">⚔️ Kilit Operasyon Planı</div>
+      
+      <div class="result-row">
+        <span>Düşmanın Dönüş Saati:</span>
+        <span class="result-val" id="resDonus">-</span>
+      </div>
+      <div class="result-row">
+        <span>Senin Gidiş Süren:</span>
+        <span class="result-val" id="resSure">-</span>
+      </div>
+      <div class="result-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
+        <span style="font-weight:700;">🚀 ASKER ÇIKIŞ SAATİN:</span>
+        <span class="highlight-time" id="resCikis">-</span>
+      </div>
+
+      <div id="warningBadge" class="warning-badge">⚠️ DİKKAT: Çıkış saati geçmişte kaldı! Bu birimle kilide yetişilemez.</div>
+
+      <button class="copy-btn" onclick="kopyalaFis()">📋 Operasyon Fişini Kopyala</button>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
+    let currentUser = { name: "Komutan", username: "", id: "local" };
+
+    if (tg) {
+      tg.expand();
+      tg.ready();
+      if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const u = tg.initDataUnsafe.user;
+        currentUser.name = u.first_name + (u.last_name ? " " + u.last_name : "");
+        currentUser.username = u.username ? `@${u.username}` : "";
+        currentUser.id = u.id;
+      }
+    }
+
+    const BIRIMLER = {
+      HUN: [
+        { name: "Toygun", speed: 125 }, { name: "Kemankeş", speed: 145 },
+        { name: "Tarık", speed: 110 }, { name: "Barlas", speed: 135 },
+        { name: "Tunga", speed: 175 }, { name: "Talakan", speed: 230 },
+        { name: "Tarkan", speed: 195 }, { name: "Mancınık", speed: 50 },
+        { name: "Topçu", speed: 60 }, { name: "Casus", speed: 300 }
+      ],
+      GÖK: [
+        { name: "Karabudun", speed: 120 }, { name: "Kemankeş", speed: 140 },
+        { name: "Tapukçi", speed: 100 }, { name: "Mavi Kurt", speed: 130 },
+        { name: "Muhafız", speed: 150 }, { name: "Mavi Atlı", speed: 200 },
+        { name: "Kürşad", speed: 180 }, { name: "Mancınık", speed: 50 },
+        { name: "Topçu", speed: 60 }, { name: "Casus", speed: 300 }
+      ],
+      SEL: [
+        { name: "Gulam", speed: 115 }, { name: "Kemankeş", speed: 135 },
+        { name: "Selçuk", speed: 105 }, { name: "Alparslan", speed: 125 },
+        { name: "Kargılı", speed: 160 }, { name: "Atlı Okçu", speed: 225 },
+        { name: "Sipahi", speed: 175 }, { name: "Mancınık", speed: 50 },
+        { name: "Topçu", speed: 60 }, { name: "Casus", speed: 300 }
+      ]
+    };
+
+    let seciliDusmanIrk = "HUN";
+    let seciliKendiIrk = localStorage.getItem(`targun_irk_${currentUser.id}`) || "HUN";
+    let dusmanTarz = "normal";
+    let kendiTarz = "normal";
+    let sonFisMetni = "";
+
+    function birimDoldur(selectId, irk) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = "";
+      BIRIMLER[irk].forEach(b => {
+        const opt = document.createElement("option");
+        opt.value = b.speed;
+        opt.textContent = `${b.name} (${b.speed})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function setDusmanIrk(irk, el) {
+      seciliDusmanIrk = irk;
+      el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
+      birimDoldur("dusmanBirim", irk);
+    }
+
+    function setKendiIrk(irk, el) {
+      seciliKendiIrk = irk;
+      localStorage.setItem(`targun_irk_${currentUser.id}`, irk);
+      el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
+      birimDoldur("kendiBirim", irk);
+    }
+
+    function setTab(type, val, el) {
+      if (type === "dusmanTarz") dusmanTarz = val;
+      if (type === "kendiTarz") kendiTarz = val;
+      el.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      el.classList.add("active");
+    }
+
+    // Kullanıcıya Özel Köy Depolama (localStorage)
+    function koyleriYukle() {
+      const kayitli = JSON.parse(localStorage.getItem(`targun_koyler_${currentUser.id}`) || "[]");
+      const select = document.getElementById("koyListesi");
+      select.innerHTML = '<option value="">-- Yeni / Elle Koordinat Gir --</option>';
+      kayitli.forEach((k, idx) => {
+        const opt = document.createElement("option");
+        opt.value = `${k.x},${k.y}`;
+        opt.textContent = `${k.name} (${k.x}|${k.y})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function koySecildi(val) {
+      if (!val) return;
+      const [x, y] = val.split(",");
+      document.getElementById("kx").value = x;
+      document.getElementById("ky").value = y;
+    }
+
+    function koyKaydet() {
+      const x = document.getElementById("kx").value.trim();
+      const y = document.getElementById("ky").value.trim();
+      if (!x || !y) {
+        alert("Lütfen önce X ve Y koordinatlarını yazın.");
+        return;
+      }
+      const isim = prompt("Bu köy için bir isim verin (Örn: Merkez, Tahıl, Asker):", "Köyüm");
+      if (!isim) return;
+
+      const kayitli = JSON.parse(localStorage.getItem(`targun_koyler_${currentUser.id}`) || "[]");
+      kayitli.push({ name: isim, x, y });
+      localStorage.setItem(`targun_koyler_${currentUser.id}`, JSON.stringify(kayitli));
+      koyleriYukle();
+      document.getElementById("koyListesi").value = `${x},${y}`;
+      alert(`${isim} başarıyla kaydedildi!`);
+    }
+
+    function koySil() {
+      const select = document.getElementById("koyListesi");
+      const val = select.value;
+      if (!val) {
+        alert("Silinecek bir kayıtlı köy seçmediniz.");
+        return;
+      }
+      if (!confirm("Bu köyü silmek istediğinize emin misiniz?")) return;
+
+      const [x, y] = val.split(",");
+      let kayitli = JSON.parse(localStorage.getItem(`targun_koyler_${currentUser.id}`) || "[]");
+      kayitli = kayitli.filter(k => !(k.x === x && k.y === y));
+      localStorage.setItem(`targun_koyler_${currentUser.id}`, JSON.stringify(kayitli));
+      koyleriYukle();
+      document.getElementById("kx").value = "";
+      document.getElementById("ky").value = "";
+    }
+
+    function sureHesapla(x1, y1, x2, y2, hiz) {
+      const mesafe = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+      const gercekHiz = hiz * 1.19995;
+      const sureDakika = mesafe / gercekHiz;
+      const toplamSaniye = Math.floor(sureDakika * 60) + 1;
+      return { mesafe, toplamSaniye };
+    }
+
+    function formatSure(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return h > 0 ? `${h} sa ${m} dk ${s} sn` : `${m} dk ${s} sn`;
+    }
+
+    function formatSaat(d) {
+      const s = String(d.getHours()).padStart(2, '0');
+      const dkk = String(d.getMinutes()).padStart(2, '0');
+      const sn = String(d.getSeconds()).padStart(2, '0');
+      return `${s}:${dkk}:${sn}`;
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      // Kullanıcı başlığını güncelle
+      document.getElementById("userDisplayName").textContent = currentUser.name;
+      document.getElementById("userSubText").textContent = currentUser.username ? `${currentUser.username} • Targun Operasyon` : "Targun Operasyon";
+
+      // Irk seçimini yükle
+      birimDoldur("dusmanBirim", seciliDusmanIrk);
+      birimDoldur("kendiBirim", seciliKendiIrk);
+
+      // Kendi ırk butonunu aktif yap
+      document.querySelectorAll("#kendiIrkGroup .tab-btn").forEach(btn => {
+        if (btn.textContent.includes(seciliKendiIrk)) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+
+      // Kayıtlı köyleri yükle
+      koyleriYukle();
+
+      // Saat kutucuklarını anlık saatle doldur
+      const now = new Date();
+      document.getElementById("savasSaat").value = String(now.getHours()).padStart(2, '0');
+      document.getElementById("savasDakika").value = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById("savasSaniye").value = String(now.getSeconds()).padStart(2, '0');
+    });
+
+    function kilitHesapla() {
+      const dx = parseFloat(document.getElementById("dx").value);
+      const dy = parseFloat(document.getElementById("dy").value);
+      const sx = parseFloat(document.getElementById("sx").value);
+      const sy = parseFloat(document.getElementById("sy").value);
+      const kx = parseFloat(document.getElementById("kx").value);
+      const ky = parseFloat(document.getElementById("ky").value);
+
+      const h = parseInt(document.getElementById("savasSaat").value, 10);
+      const m = parseInt(document.getElementById("savasDakika").value, 10);
+      const s = parseInt(document.getElementById("savasSaniye").value, 10);
+
+      if (isNaN(dx) || isNaN(dy) || isNaN(sx) || isNaN(sy) || isNaN(kx) || isNaN(ky)) {
+        alert("Lütfen tüm koordinatları eksiksiz girin.");
+        return;
+      }
+
+      if (isNaN(h) || isNaN(m) || isNaN(s) || h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+        alert("Lütfen geçerli bir saat (0-23), dakika (0-59) ve saniye (0-59) girin.");
+        return;
+      }
+
+      const dHiz = parseFloat(document.getElementById("dusmanBirim").value);
+      const kHiz = parseFloat(document.getElementById("kendiBirim").value);
+
+      const savasDate = new Date();
+      savasDate.setHours(h, m, s, 0);
+
+      let dusmanSure = sureHesapla(dx, dy, sx, sy, dHiz).toplamSaniye;
+      if (dusmanTarz === "elmas") dusmanSure = Math.floor(dusmanSure / 2);
+      const varisDate = new Date(savasDate.getTime() + dusmanSure * 1000);
+
+      let kendiSure = sureHesapla(kx, ky, dx, dy, kHiz).toplamSaniye;
+      if (kendiTarz === "elmas") kendiSure = Math.floor(kendiSure / 2);
+      const cikisDate = new Date(varisDate.getTime() - kendiSure * 1000);
+
+      const suAn = new Date();
+      const gecKalindi = cikisDate.getTime() < suAn.getTime();
+
+      const card = document.getElementById("sonucCard");
+      const resCikisEl = document.getElementById("resCikis");
+      const warningBadge = document.getElementById("warningBadge");
+      const cardHeaderTitle = document.getElementById("cardHeaderTitle");
+
+      if (gecKalindi) {
+        card.classList.add("late");
+        resCikisEl.classList.add("late");
+        warningBadge.style.display = "block";
+        cardHeaderTitle.style.color = "var(--danger-color)";
+      } else {
+        card.classList.remove("late");
+        resCikisEl.classList.remove("late");
+        warningBadge.style.display = "none";
+        cardHeaderTitle.style.color = "var(--success-color)";
+      }
+
+      document.getElementById("resDonus").textContent = formatSaat(varisDate);
+      document.getElementById("resSure").textContent = formatSure(kendiSure);
+      resCikisEl.textContent = formatSaat(cikisDate);
+      
+      const kSelect = document.getElementById("kendiBirim");
+      const secilenBirimAdi = kSelect.options[kSelect.selectedIndex].text;
+      
+      const koySelect = document.getElementById("koyListesi");
+      const koyAdi = koySelect.selectedIndex > 0 ? koySelect.options[koySelect.selectedIndex].text : `X: ${kx} | Y: ${ky}`;
+
+      sonFisMetni = `⚔️ TARGUN KİLİT OPERASYONU ⚔️\n` +
+                    `👤 Komutan: ${currentUser.name} ${currentUser.username}\n` +
+                    `🏰 Çıkış Köyüm: ${koyAdi}\n` +
+                    `🎯 Hedef: X: ${dx} | Y: ${dy}\n` +
+                    `💂 Birim: ${secilenBirimAdi}\n` +
+                    `🕒 İniş / Kilit Saati: ${formatSaat(varisDate)}\n` +
+                    `🚀 Asker Çıkış Saati: ${formatSaat(cikisDate)}` +
+                    (gecKalindi ? `\n⚠️ DİKKAT: Çıkış zamanı geçmiştir!` : ``);
+
+      card.style.display = "block";
+      card.scrollIntoView({ behavior: 'smooth' });
+
+      if (tg && tg.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred(gecKalindi ? "error" : "success");
+      }
+    }
+
+    function kopyalaFis() {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(sonFisMetni).then(() => {
+          alert("Operasyon fişi panoya kopyalandı!");
+        }).catch(() => fallbackKopyala());
+      } else {
+        fallbackKopyala();
+      }
+    }
+
+    function fallbackKopyala() {
+      const textarea = document.createElement("textarea");
+      textarea.value = sonFisMetni;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+        alert("Operasyon fişi panoya kopyalandı!");
+      } catch (err) {
+        alert("Kopyalama başarısız oldu, manuel kopyalayın.");
+      }
+      document.body.removeChild(textarea);
+    }
+  </script>
+</body>
+</html>
