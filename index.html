@@ -105,7 +105,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .field:last-child {
@@ -312,11 +312,18 @@
         </div>
       </div>
 
+      <!-- Savunan Köy (Listeden Seçimli) -->
       <div class="field">
         <label>Saldırılan Yer (Savunan Köy)</label>
+        <select id="savunanKoyListesi" onchange="koySecildi(this.value, 'sx', 'sy')" style="margin-bottom: 6px;">
+          <option value="">-- Kayıtlı Köylerimden Seç --</option>
+        </select>
         <div class="grid-2">
           <input type="number" id="sx" placeholder="X (Örn: 19172)">
           <input type="number" id="sy" placeholder="Y (Örn: 35546)">
+        </div>
+        <div class="village-actions">
+          <button class="btn-secondary" onclick="koyKaydet('sx', 'sy', 'savunanKoyListesi')">💾 Bu Konumu Listeye Kaydet</button>
         </div>
       </div>
 
@@ -353,23 +360,19 @@
     <div class="card">
       <div class="card-title">🛡️ Senin Çıkış ve Ordu Bilgilerin</div>
       
-      <!-- Köy Yönetim Listesi -->
-      <div class="field">
-        <label>Kayıtlı Köylerim</label>
-        <select id="koyListesi" onchange="koySecildi(this.value)">
-          <option value="">-- Yeni / Elle Koordinat Gir --</option>
-        </select>
-        <div class="village-actions">
-          <button class="btn-secondary" onclick="koyKaydet()">💾 Bu Konumu Kaydet</button>
-          <button class="btn-secondary" onclick="koySil()">🗑️ Seçili Köyü Sil</button>
-        </div>
-      </div>
-
+      <!-- Çıkış Köyü (Listeden Seçimli) -->
       <div class="field">
         <label>Kilidi Atacağın Köyün (Senin Konumun)</label>
+        <select id="kendiKoyListesi" onchange="koySecildi(this.value, 'kx', 'ky')" style="margin-bottom: 6px;">
+          <option value="">-- Kayıtlı Köylerimden Seç --</option>
+        </select>
         <div class="grid-2">
           <input type="number" id="kx" placeholder="X (Örn: 8800)">
           <input type="number" id="ky" placeholder="Y (Örn: 9800)">
+        </div>
+        <div class="village-actions">
+          <button class="btn-secondary" onclick="koyKaydet('kx', 'ky', 'kendiKoyListesi')">💾 Bu Konumu Listeye Kaydet</button>
+          <button class="btn-secondary" onclick="koySil('kendiKoyListesi')">🗑️ Seçili Köyü Sil</button>
         </div>
       </div>
 
@@ -495,31 +498,37 @@
       el.classList.add("active");
     }
 
-    // Kullanıcıya Özel Köy Depolama (localStorage)
+    // Her iki açılır menüyü de (Savunan & Çıkış) tek havuzdan günceller
     function koyleriYukle() {
       const kayitli = JSON.parse(localStorage.getItem(`targun_koyler_${currentUser.id}`) || "[]");
-      const select = document.getElementById("koyListesi");
-      select.innerHTML = '<option value="">-- Yeni / Elle Koordinat Gir --</option>';
-      kayitli.forEach((k, idx) => {
-        const opt = document.createElement("option");
-        opt.value = `${k.x},${k.y}`;
-        opt.textContent = `${k.name} (${k.x}|${k.y})`;
-        select.appendChild(opt);
+      const listeler = ["savunanKoyListesi", "kendiKoyListesi"];
+
+      listeler.forEach(id => {
+        const select = document.getElementById(id);
+        const seciliDeger = select.value;
+        select.innerHTML = '<option value="">-- Kayıtlı Köylerimden Seç --</option>';
+        kayitli.forEach(k => {
+          const opt = document.createElement("option");
+          opt.value = `${k.x},${k.y}`;
+          opt.textContent = `${k.name} (${k.x}|${k.y})`;
+          select.appendChild(opt);
+        });
+        select.value = seciliDeger;
       });
     }
 
-    function koySecildi(val) {
+    function koySecildi(val, targetXId, targetYId) {
       if (!val) return;
       const [x, y] = val.split(",");
-      document.getElementById("kx").value = x;
-      document.getElementById("ky").value = y;
+      document.getElementById(targetXId).value = x;
+      document.getElementById(targetYId).value = y;
     }
 
-    function koyKaydet() {
-      const x = document.getElementById("kx").value.trim();
-      const y = document.getElementById("ky").value.trim();
+    function koyKaydet(targetXId, targetYId, sourceSelectId) {
+      const x = document.getElementById(targetXId).value.trim();
+      const y = document.getElementById(targetYId).value.trim();
       if (!x || !y) {
-        alert("Lütfen önce X ve Y koordinatlarını yazın.");
+        alert("Lütfen önce kaydedilecek X ve Y koordinatlarını yazın.");
         return;
       }
       const isim = prompt("Bu köy için bir isim verin (Örn: Merkez, Tahıl, Asker):", "Köyüm");
@@ -529,23 +538,25 @@
       kayitli.push({ name: isim, x, y });
       localStorage.setItem(`targun_koyler_${currentUser.id}`, JSON.stringify(kayitli));
       koyleriYukle();
-      document.getElementById("koyListesi").value = `${x},${y}`;
+      
+      document.getElementById(sourceSelectId).value = `${x},${y}`;
       alert(`${isim} başarıyla kaydedildi!`);
     }
 
-    function koySil() {
-      const select = document.getElementById("koyListesi");
+    function koySil(sourceSelectId) {
+      const select = document.getElementById(sourceSelectId);
       const val = select.value;
       if (!val) {
-        alert("Silinecek bir kayıtlı köy seçmediniz.");
+        alert("Silinecek kayıtlı bir köy seçmediniz.");
         return;
       }
-      if (!confirm("Bu köyü silmek istediğinize emin misiniz?")) return;
+      if (!confirm("Bu köyü kayıtlardan silmek istediğinize emin misiniz?")) return;
 
       const [x, y] = val.split(",");
       let kayitli = JSON.parse(localStorage.getItem(`targun_koyler_${currentUser.id}`) || "[]");
       kayitli = kayitli.filter(k => !(k.x === x && k.y === y));
       localStorage.setItem(`targun_koyler_${currentUser.id}`, JSON.stringify(kayitli));
+      
       koyleriYukle();
       document.getElementById("kx").value = "";
       document.getElementById("ky").value = "";
@@ -574,15 +585,12 @@
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      // Kullanıcı başlığını güncelle
       document.getElementById("userDisplayName").textContent = currentUser.name;
       document.getElementById("userSubText").textContent = currentUser.username ? `${currentUser.username} • Targun Operasyon` : "Targun Operasyon";
 
-      // Irk seçimini yükle
       birimDoldur("dusmanBirim", seciliDusmanIrk);
       birimDoldur("kendiBirim", seciliKendiIrk);
 
-      // Kendi ırk butonunu aktif yap
       document.querySelectorAll("#kendiIrkGroup .tab-btn").forEach(btn => {
         if (btn.textContent.includes(seciliKendiIrk)) {
           btn.classList.add("active");
@@ -591,10 +599,8 @@
         }
       });
 
-      // Kayıtlı köyleri yükle
       koyleriYukle();
 
-      // Saat kutucuklarını anlık saatle doldur
       const now = new Date();
       document.getElementById("savasSaat").value = String(now.getHours()).padStart(2, '0');
       document.getElementById("savasDakika").value = String(now.getMinutes()).padStart(2, '0');
@@ -664,13 +670,17 @@
       const kSelect = document.getElementById("kendiBirim");
       const secilenBirimAdi = kSelect.options[kSelect.selectedIndex].text;
       
-      const koySelect = document.getElementById("koyListesi");
-      const koyAdi = koySelect.selectedIndex > 0 ? koySelect.options[koySelect.selectedIndex].text : `X: ${kx} | Y: ${ky}`;
+      const cikisKoySelect = document.getElementById("kendiKoyListesi");
+      const cikisKoyAdi = cikisKoySelect.selectedIndex > 0 ? cikisKoySelect.options[cikisKoySelect.selectedIndex].text : `X: ${kx} | Y: ${ky}`;
+
+      const savunanKoySelect = document.getElementById("savunanKoyListesi");
+      const savunanKoyAdi = savunanKoySelect.selectedIndex > 0 ? savunanKoySelect.options[savunanKoySelect.selectedIndex].text : `X: ${sx} | Y: ${sy}`;
 
       sonFisMetni = `⚔️ TARGUN KİLİT OPERASYONU ⚔️\n` +
                     `👤 Komutan: ${currentUser.name} ${currentUser.username}\n` +
-                    `🏰 Çıkış Köyüm: ${koyAdi}\n` +
-                    `🎯 Hedef: X: ${dx} | Y: ${dy}\n` +
+                    `🛡️ Savunan Hedef: ${savunanKoyAdi}\n` +
+                    `🏰 Çıkış Köyüm: ${cikisKoyAdi}\n` +
+                    `🎯 Düşman Köyü (Dönüş): X: ${dx} | Y: ${dy}\n` +
                     `💂 Birim: ${secilenBirimAdi}\n` +
                     `🕒 İniş / Kilit Saati: ${formatSaat(varisDate)}\n` +
                     `🚀 Asker Çıkış Saati: ${formatSaat(cikisDate)}` +
